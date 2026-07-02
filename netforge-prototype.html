@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetForge — All-in-One Network Engineering</title>
+<style>
+  :root{
+    --bg:#0b0f17; --panel:#121826; --panel-2:#0f1420; --border:#1f2937;
+    --text:#e5e9f0; --muted:#8b95a7; --accent:#3b82f6; --accent-2:#22d3ee;
+    --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --purple:#a855f7;
+    --radius:12px; --shadow:0 8px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+  a{color:var(--accent-2);text-decoration:none}
+  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  /* Sidebar */
+  .sidebar{background:var(--panel-2);border-right:1px solid var(--border);padding:18px 12px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px;font-weight:700;font-size:18px;letter-spacing:.3px}
+  .brand .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-size:16px}
+  .navsec{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin:16px 10px 6px}
+  .navitem{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;color:var(--text);cursor:pointer;font-weight:500;margin-bottom:2px}
+  .navitem:hover{background:#172033}
+  .navitem.active{background:linear-gradient(90deg,rgba(59,130,246,.18),rgba(34,211,238,.06));color:#fff;box-shadow:inset 2px 0 0 var(--accent)}
+  .navitem .ic{width:18px;text-align:center}
+  /* Main */
+  .main{padding:0 0 60px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(11,15,23,.85);backdrop-filter:blur(8px);z-index:5}
+  .topbar .search{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:8px 12px;width:320px;color:var(--text)}
+  .topbar .right{display:flex;align-items:center;gap:14px;color:var(--muted)}
+  .pill{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px}
+  .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#3b82f6);display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff}
+  .view{padding:24px 28px;display:none}
+  .view.active{display:block}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 22px}
+  /* Cards & grid */
+  .grid{display:grid;gap:16px}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g3,.g2{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+  .card h3{margin:0 0 2px;font-size:14px;color:var(--muted);font-weight:600}
+  .stat{font-size:28px;font-weight:700;margin:6px 0 0}
+  .stat small{font-size:13px;font-weight:500}
+  .delta{font-size:12px;margin-top:4px}
+  .up{color:var(--green)} .down{color:var(--red)} .warn{color:var(--amber)}
+  .cardhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .cardhead h2{font-size:15px;margin:0}
+  /* Table */
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  tbody tr:hover{background:#172033}
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+  .b-green{background:rgba(34,197,94,.15);color:#4ade80}
+  .b-amber{background:rgba(245,158,11,.15);color:#fbbf24}
+  .b-red{background:rgba(239,68,68,.15);color:#f87171}
+  .b-blue{background:rgba(59,130,246,.15);color:#60a5fa}
+  .b-gray{background:rgba(139,149,167,.15);color:#a8b2c4}
+  .b-purple{background:rgba(168,85,247,.15);color:#c084fc}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+  .btn{background:var(--accent);color:#fff;border:none;padding:9px 16px;border-radius:9px;font-weight:600;cursor:pointer;font-size:13px}
+  .btn:hover{filter:brightness(1.1)}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .toolgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:900px){.toolgrid{grid-template-columns:1fr}}
+  .tool{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer}
+  .tool:hover{border-color:var(--accent)}
+  .tool .ti{font-size:22px;margin-bottom:8px}
+  .tool h4{margin:0 0 4px;font-size:14px}
+  .tool p{margin:0;color:var(--muted);font-size:12px}
+  input,select,textarea{background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit}
+  .console{background:#070a10;border:1px solid var(--border);border-radius:10px;padding:14px;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px;color:#9fe6b0;white-space:pre-wrap;min-height:120px;max-height:300px;overflow:auto}
+  /* Bars */
+  .bar{height:8px;background:#1c2536;border-radius:6px;overflow:hidden}
+  .bar > span{display:block;height:100%;border-radius:6px}
+  /* Drop zone */
+  .drop{border:2px dashed var(--border);border-radius:14px;padding:40px;text-align:center;color:var(--muted);cursor:pointer;transition:.15s}
+  .drop:hover,.drop.over{border-color:var(--accent);background:#101a2e;color:var(--text)}
+  .stepper{display:flex;gap:0;margin:18px 0}
+  .step{flex:1;text-align:center;padding:10px;border-bottom:2px solid var(--border);color:var(--muted);font-size:12px;font-weight:600}
+  .step.done{color:var(--green);border-color:var(--green)}
+  .step.active{color:var(--accent-2);border-color:var(--accent-2)}
+  .risk-ring{width:120px;height:120px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+  .spark{display:flex;align-items:flex-end;gap:3px;height:40px}
+  .spark span{flex:1;background:linear-gradient(180deg,var(--accent),var(--accent-2));border-radius:2px;opacity:.85}
+  .hidden{display:none}
+  .topo{width:100%;height:340px;background:var(--panel-2);border-radius:10px;border:1px solid var(--border)}
+  .note{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:12px 14px;font-size:12.5px;color:#bcd2f0;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand"><span class="logo">⬡</span> NetForge</div>
+    <div class="navsec">Operate</div>
+    <div class="navitem active" data-view="dashboard"><span class="ic">▦</span> Dashboard</div>
+    <div class="navitem" data-view="inventory"><span class="ic">🖧</span> Discovery & Inventory</div>
+    <div class="navitem" data-view="monitoring"><span class="ic">📈</span> Monitoring</div>
+    <div class="navitem" data-view="diagnostics"><span class="ic">🛠</span> Diagnostics</div>
+    <div class="navsec">Manage</div>
+    <div class="navitem" data-view="config"><span class="ic">⚙</span> Config Management</div>
+    <div class="navitem" data-view="ipam"><span class="ic">🌐</span> IPAM</div>
+    <div class="navsec">Secure</div>
+    <div class="navitem" data-view="firmware"><span class="ic">🔬</span> Firmware Scanner</div>
+    <div class="navitem" data-view="security"><span class="ic">🛡</span> Security & Compliance</div>
+    <div class="navsec">System</div>
+    <div class="navitem" data-view="settings"><span class="ic">⚡</span> Automation</div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <input class="search" placeholder="🔍  Search devices, IPs, configs, CVEs…">
+      <div class="right">
+        <span class="pill"><span class="dot" style="background:var(--green)"></span>248 online</span>
+        <span class="pill warn"><span class="dot" style="background:var(--amber)"></span>3 alerts</span>
+        <div class="avatar">BN</div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section class="view active" id="dashboard">
+      <h1>Network Overview</h1>
+      <p class="sub">Site: HQ-DataCenter-1 · Last refresh just now</p>
+      <div class="grid g4">
+        <div class="card"><h3>Devices Online</h3><div class="stat">248<small> / 251</small></div><div class="delta up">▲ 99.2% availability</div></div>
+        <div class="card"><h3>Avg Latency</h3><div class="stat">4.2<small> ms</small></div><div class="delta up">▼ 0.8ms vs yesterday</div></div>
+        <div class="card"><h3>Open Alerts</h3><div class="stat">3</div><div class="delta warn">2 medium · 1 high</div></div>
+        <div class="card"><h3>Critical CVEs</h3><div class="stat" style="color:#f87171">7</div><div class="delta down">across 4 firmware images</div></div>
+      </div>
+
+      <div class="grid g2" style="margin-top:16px">
+        <div class="card">
+          <div class="cardhead"><h2>Throughput (24h)</h2><span class="badge b-blue">WAN uplink</span></div>
+          <div class="spark" id="dashSpark"></div>
+          <div class="legend"><span>↓ 1.84 Gbps avg</span><span>↑ 612 Mbps avg</span><span>Peak 3.1 Gbps</span></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><h2>Active Alerts</h2><span class="badge b-amber">3</span></div>
+          <table><tbody>
+            <tr><td><span class="badge b-red">High</span></td><td>core-sw-02</td><td>CPU 94% sustained</td><td style="color:var(--muted)">8m ago</td></tr>
+            <tr><td><span class="badge b-amber">Med</span></td><td>edge-fw-01</td><td>Firmware out of date (CVE)</td><td style="color:var(--muted)">1h ago</td></tr>
+            <tr><td><span class="badge b-amber">Med</span></td><td>ap-floor3-11</td><td>Packet loss 2.1%</td><td style="color:var(--muted)">3h ago</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="cardhead"><h2>Live Topology</h2><span class="badge b-gray">auto-discovered · LLDP/CDP</span></div>
+        <svg class="topo" id="topo" viewBox="0 0 900 340" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="note">⚠ This is an interactive UI prototype. Data shown is simulated. Live discovery, polling, and scanning require the NetForge backend agent (not bundled in this demo).</div>
+    </section>
+
+    <!-- INVENTORY -->
+    <section class="view" id="inventory">
+      <h1>Discovery & Inventory</h1>
+      <p class="sub">251 devices discovered via SNMP, LLDP, CDP, ARP and mDNS sweeps</p>
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <button class="btn" onclick="runDiscovery()">⟳ Run Discovery Sweep</button>
+        <select id="invFilter" onchange="renderInventory()">
+          <option value="">All types</option><option>Switch</option><option>Router</option>
+          <option>Firewall</option><option>Access Point</option><option>Server</option>
+        </select>
+        <input id="invSearch" placeholder="Filter by name / IP / vendor" oninput="renderInventory()" style="flex:1">
+      </div>
+      <div class="card"><table>
+        <thead><tr><th>Status</th><th>Hostname</th><th>IP</th><th>Type</th><th>Vendor / Model</th><th>Firmware</th><th>Uptime</th><th></th></tr></thead>
+        <tbody id="invBody"></tbody>
+      </table></div>
+    </section>
+
+    <!-- MONITORING -->
+    <section class="view" id="monitoring">
+      <h1>Monitoring & Alerting</h1>
+      <p class="sub">Real-time polling · SNMP / ICMP / streaming telemetry</p>
+      <div class="grid g3">
+        <div class="card"><h3>core-sw-01 · CPU</h3><div class="stat">38<small>%</small></div><div class="bar"><span style="width:38%;background:var(--green)"></span></div></div>
+        <div class="card"><h3>core-sw-02 · CPU</h3><div class="stat" style="color:#f87171">94<small>%</small></div><div class="bar"><span style="width:94%;background:var(--red)"></span></div></div>
+        <div class="card"><h3>edge-fw-01 · Sessions</h3><div class="stat">18.2<small>k</small></div><div class="bar"><span style="width:61%;background:var(--accent)"></span></div></div>
+      </div>
+      <div class="grid g2" style="margin-top:16px">
+        <div class="card"><div class="cardhead"><h2>Interface Utilization</h2></div>
+          <table><thead><tr><th>Interface</th><th>In</th><th>Out</th><th>Errors</th><th>Util</th></tr></thead><tbody id="ifBody"></tbody></table>
+        </div>
+        <div class="card"><div class="cardhead"><h2>Latency / Loss (top talkers)</h2></div>
+          <table><thead><tr><th>Target</th><th>Latency</th><th>Jitter</th><th>Loss</th></tr></thead><tbody id="latBody"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- DIAGNOSTICS -->
+    <section class="view" id="diagnostics">
+      <h1>Diagnostics Toolkit</h1>
+      <p class="sub">Every utility in one place</p>
+      <div class="toolgrid" id="toolGrid"></div>
+      <div class="card" style="margin-top:18px">
+        <div class="cardhead"><h2 id="toolTitle">Ping</h2><span class="badge b-blue" id="toolTag">ICMP</span></div>
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <input id="toolInput" placeholder="Enter host or IP — e.g. 10.0.1.1" style="flex:1">
+          <button class="btn" onclick="runTool()">Run</button>
+        </div>
+        <div class="console" id="toolOut">Select a tool and run a command…</div>
+      </div>
+    </section>
+
+    <!-- CONFIG -->
+    <section class="view" id="config">
+      <h1>Configuration Management</h1>
+      <p class="sub">Backups · version diffing · bulk push · drift detection</p>
+      <div class="grid g4">
+        <div class="card"><h3>Configs Backed Up</h3><div class="stat">251</div><div class="delta up">last run 02:00</div></div>
+        <div class="card"><h3>Drift Detected</h3><div class="stat warn">6</div><div class="delta warn">vs golden baseline</div></div>
+        <div class="card"><h3>Pending Pushes</h3><div class="stat">2</div><div class="delta">scheduled 22:00</div></div>
+        <div class="card"><h3>Rollback Points</h3><div class="stat">1,204</div><div class="delta">90-day retention</div></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="cardhead"><h2>Config Drift — edge-fw-01</h2><button class="btn sm ghost">Restore baseline</button></div>
+        <div class="grid g2">
+          <div><div style="color:var(--muted);font-size:12px;margin-bottom:6px">Golden baseline</div>
+            <div class="console" style="color:#9fb4d6">interface GigabitEthernet0/1
+ description WAN-Uplink
+ ip access-group SECURE_IN in
+ no ip proxy-arp
+ service password-encryption</div></div>
+          <div><div style="color:var(--muted);font-size:12px;margin-bottom:6px">Running config</div>
+            <div class="console" style="color:#f3c"><span style="color:#9fb4d6">interface GigabitEthernet0/1
+ description WAN-Uplink</span>
+- ip access-group SECURE_IN in
+- no ip proxy-arp
+<span style="color:#9fb4d6"> service password-encryption</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- IPAM -->
+    <section class="view" id="ipam">
+      <h1>IP Address Management</h1>
+      <p class="sub">Subnets · VLANs · DHCP scopes · conflict detection</p>
+      <div class="card"><table>
+        <thead><tr><th>Subnet</th><th>VLAN</th><th>Purpose</th><th>Used / Total</th><th>Utilization</th><th>Status</th></tr></thead>
+        <tbody id="ipamBody"></tbody>
+      </table></div>
+    </section>
+
+    <!-- FIRMWARE SCANNER -->
+    <section class="view" id="firmware">
+      <h1>Firmware Vulnerability Scanner</h1>
+      <p class="sub">Unpack firmware → build SBOM → match known CVEs → risk-ranked report</p>
+
+      <div id="fwUpload">
+        <div class="drop" id="drop">
+          <div style="font-size:34px;margin-bottom:8px">📦</div>
+          <div style="font-weight:600;color:var(--text)">Drop a firmware image here, or click to choose a sample</div>
+          <div style="margin-top:6px">Supports .bin .img .trx .chk .squashfs — or pull live from a device</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn" onclick="startScan('router_ac1900_v2.1.4.bin')">▶ Scan sample: router_ac1900_v2.1.4.bin</button>
+          <button class="btn ghost" onclick="startScan('edge-fw-01 (live pull)')">⤓ Pull from edge-fw-01</button>
+        </div>
+      </div>
+
+      <div id="fwProgress" class="hidden">
+        <div class="stepper">
+          <div class="step" id="st1">1 · Unpack</div>
+          <div class="step" id="st2">2 · Identify components</div>
+          <div class="step" id="st3">3 · Build SBOM</div>
+          <div class="step" id="st4">4 · Match CVEs</div>
+          <div class="step" id="st5">5 · Report</div>
+        </div>
+        <div class="card"><div class="console" id="fwConsole"></div></div>
+      </div>
+
+      <div id="fwReport" class="hidden">
+        <div class="grid g4">
+          <div class="card" style="display:flex;align-items:center;gap:14px">
+            <svg class="risk-ring" viewBox="0 0 36 36"><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1c2536" stroke-width="3"/><path id="riskArc" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="78,100" stroke-linecap="round"/><text x="18" y="20.5" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">78</text></svg>
+            <div><h3>Risk Score</h3><div style="font-weight:700;color:#f87171;font-size:18px">High</div><div style="color:var(--muted);font-size:12px">CVSS-weighted</div></div>
+          </div>
+          <div class="card"><h3>Components</h3><div class="stat">42</div><div class="delta">in SBOM</div></div>
+          <div class="card"><h3>CVEs Found</h3><div class="stat" style="color:#f87171">11</div><div class="delta down">3 critical · 4 high</div></div>
+          <div class="card"><h3>Secrets / Keys</h3><div class="stat warn">2</div><div class="delta warn">hardcoded</div></div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="cardhead"><h2>Vulnerabilities</h2><button class="btn sm" onclick="resetScan()">Scan another</button></div>
+          <table>
+            <thead><tr><th>Severity</th><th>CVE</th><th>Component</th><th>Version</th><th>Fixed in</th><th>Issue</th></tr></thead>
+            <tbody id="cveBody"></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="cardhead"><h2>Software Bill of Materials (excerpt)</h2><button class="btn sm ghost">Export CycloneDX</button></div>
+          <table><thead><tr><th>Component</th><th>Version</th><th>Type</th><th>License</th><th>CVEs</th></tr></thead>
+          <tbody id="sbomBody"></tbody></table>
+        </div>
+        <div class="note">How this works in production: extraction uses a binwalk-style unpacker, component versions are fingerprinted from binaries/package manifests, and findings are matched against the NVD CVE feed plus vendor advisories. Best used against firmware you operate, for patch-management.</div>
+      </div>
+    </section>
+
+    <!-- SECURITY -->
+    <section class="view" id="security">
+      <h1>Security & Compliance</h1>
+      <p class="sub">Network scanning · credential hygiene · benchmark checks</p>
+      <div class="grid g3">
+        <div class="card"><h3>Compliance (CIS)</h3><div class="stat up">87<small>%</small></div><div class="bar"><span style="width:87%;background:var(--green)"></span></div></div>
+        <div class="card"><h3>Default Creds Found</h3><div class="stat" style="color:#f87171">2</div><div class="delta down">ap-floor2-04, cam-lobby</div></div>
+        <div class="card"><h3>Weak TLS / Ciphers</h3><div class="stat warn">5</div><div class="delta warn">TLS 1.0/1.1 enabled</div></div>
+      </div>
+      <div class="card" style="margin-top:16px"><div class="cardhead"><h2>Findings</h2></div>
+        <table><thead><tr><th>Severity</th><th>Host</th><th>Finding</th><th>Check</th></tr></thead><tbody id="secBody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- AUTOMATION -->
+    <section class="view" id="settings">
+      <h1>Automation & Scheduled Jobs</h1>
+      <p class="sub">Recurring backups, scans, and reports · API & RBAC</p>
+      <div class="card"><table>
+        <thead><tr><th>Job</th><th>Schedule</th><th>Last run</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Nightly config backup</td><td>Daily 02:00</td><td>Today 02:00</td><td><span class="badge b-green">Success</span></td></tr>
+          <tr><td>Firmware CVE re-scan</td><td>Weekly Sun 03:00</td><td>Jun 28</td><td><span class="badge b-green">Success</span></td></tr>
+          <tr><td>Discovery sweep</td><td>Every 6h</td><td>3h ago</td><td><span class="badge b-green">Success</span></td></tr>
+          <tr><td>Compliance report → email</td><td>Monthly 1st</td><td>Jun 1</td><td><span class="badge b-blue">Scheduled</span></td></tr>
+          <tr><td>Drift alert → Slack</td><td>On change</td><td>1h ago</td><td><span class="badge b-amber">6 drifts</span></td></tr>
+        </tbody>
+      </table></div>
+      <div class="note">RBAC, audit logging, multi-site/tenant support and a REST/GraphQL API back these workflows in the full product.</div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+// ---------- Navigation ----------
+document.querySelectorAll('.navitem').forEach(n=>{
+  n.addEventListener('click',()=>{
+    document.querySelectorAll('.navitem').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+    n.classList.add('active');
+    document.getElementById(n.dataset.view).classList.add('active');
+  });
+});
+
+// ---------- Mock data ----------
+const devices=[
+  ['Switch','core-sw-01','10.0.0.2','Cisco','Catalyst 9300','17.09.04a','142d','online'],
+  ['Switch','core-sw-02','10.0.0.3','Cisco','Catalyst 9300','17.06.01','142d','online'],
+  ['Router','edge-rtr-01','10.0.0.1','Juniper','MX204','21.4R3','310d','online'],
+  ['Firewall','edge-fw-01','10.0.0.5','Palo Alto','PA-3220','10.2.3','88d','online'],
+  ['Firewall','edge-fw-02','10.0.0.6','Fortinet','FortiGate 100F','7.2.5','88d','online'],
+  ['Access Point','ap-floor3-11','10.0.4.31','Aruba','AP-535','8.10.0.4','61d','online'],
+  ['Access Point','ap-floor2-04','10.0.4.18','TP-Link','EAP670','1.0.12','14d','warn'],
+  ['Server','esxi-host-07','10.0.8.7','Dell','PowerEdge R750','8.0u2','203d','online'],
+  ['Switch','dist-sw-04','10.0.1.4','Aruba','CX 6300','10.10','55d','online'],
+  ['Router','vpn-rtr-02','10.0.0.9','MikroTik','CCR2004','7.11','9d','online'],
+  ['Server','cam-lobby','10.0.9.2','Hikvision','DS-2CD','5.5.82','420d','warn'],
+];
+function statusBadge(s){return s==='online'?'<span class="badge b-green"><span class="dot" style="background:#4ade80"></span>Online</span>':'<span class="badge b-amber"><span class="dot" style="background:#fbbf24"></span>Warning</span>';}
+function renderInventory(){
+  const t=document.getElementById('invFilter').value;
+  const q=(document.getElementById('invSearch').value||'').toLowerCase();
+  const rows=devices.filter(d=>(!t||d[0]===t)&&(!q||(d[1]+d[2]+d[3]).toLowerCase().includes(q)));
+  document.getElementById('invBody').innerHTML=rows.map(d=>`<tr>
+    <td>${statusBadge(d[7])}</td><td><b>${d[1]}</b></td><td>${d[2]}</td><td><span class="badge b-blue">${d[0]}</span></td>
+    <td>${d[3]} · ${d[4]}</td><td>${d[5]}</td><td>${d[6]}</td>
+    <td><button class="btn sm ghost" onclick="alert('Open device console for ${d[1]} (prototype)')">Manage</button></td></tr>`).join('');
+}
+function runDiscovery(){ alert('Discovery sweep started across 10.0.0.0/16 (simulated). 3 new devices would appear here.'); }
+
+// Monitoring
+const ifs=[['Gi0/1','842 Mbps','311 Mbps','0','61%','var(--accent)'],['Gi0/2','120 Mbps','88 Mbps','0','12%','var(--green)'],
+['Te1/1','2.1 Gbps','640 Mbps','2','78%','var(--amber)'],['Te1/2','310 Mbps','210 Mbps','0','9%','var(--green)']];
+const lat=[['edge-rtr-01','1.1 ms','0.2 ms','0%'],['8.8.8.8','11.4 ms','0.6 ms','0%'],['ap-floor3-11','3.8 ms','1.9 ms','2.1%'],['esxi-host-07','0.4 ms','0.1 ms','0%']];
+function renderMon(){
+  document.getElementById('ifBody').innerHTML=ifs.map(i=>`<tr><td><b>${i[0]}</b></td><td>${i[1]}</td><td>${i[2]}</td><td>${i[3]==='0'?i[3]:'<span class=warn>'+i[3]+'</span>'}</td><td><div class="bar" style="width:90px"><span style="width:${i[4]};background:${i[5]}"></span></div></td></tr>`).join('');
+  document.getElementById('latBody').innerHTML=lat.map(l=>`<tr><td><b>${l[0]}</b></td><td>${l[1]}</td><td>${l[2]}</td><td>${l[3]==='0%'?l[3]:'<span class=down>'+l[3]+'</span>'}</td></tr>`).join('');
+}
+
+// IPAM
+const subnets=[['10.0.0.0/24','1','Core infra','198 / 254','78%','b-amber'],['10.0.4.0/23','40','Wireless clients','410 / 510','80%','b-amber'],
+['10.0.8.0/24','80','Servers / VM','64 / 254','25%','b-green'],['10.0.9.0/24','90','IoT / Cameras','51 / 254','20%','b-green'],
+['10.0.20.0/24','20','Guest','12 / 254','5%','b-green'],['172.16.0.0/24','99','DMZ','240 / 254','94%','b-red']];
+function renderIpam(){
+  document.getElementById('ipamBody').innerHTML=subnets.map(s=>{const pct=s[4];const col=s[5]==='b-red'?'var(--red)':s[5]==='b-amber'?'var(--amber)':'var(--green)';
+  return `<tr><td><b>${s[0]}</b></td><td>${s[1]}</td><td>${s[2]}</td><td>${s[3]}</td><td><div class="bar" style="width:120px"><span style="width:${pct};background:${col}"></span></div></td><td><span class="badge ${s[5]}">${pct}</span></td></tr>`;}).join('');
+}
+
+// Security findings
+const sec=[['High','ap-floor2-04','Default admin/admin credentials accepted','Credential check','b-red'],
+['High','cam-lobby','Default password in use','Credential check','b-red'],
+['Med','edge-fw-02','TLS 1.0 enabled on mgmt interface','Cipher audit','b-amber'],
+['Med','dist-sw-04','SNMP community "public" writable','SNMP scan','b-amber'],
+['Low','core-sw-01','HTTP (non-TLS) mgmt reachable','Port scan','b-blue']];
+function renderSec(){document.getElementById('secBody').innerHTML=sec.map(s=>`<tr><td><span class="badge ${s[4]}">${s[0]}</span></td><td><b>${s[1]}</b></td><td>${s[2]}</td><td style="color:var(--muted)">${s[3]}</td></tr>`).join('');}
+
+// Diagnostics tools
+const tools=[
+  ['Ping','ICMP','📡','Reachability & RTT'],['Traceroute','Path','🧭','Hop-by-hop path'],
+  ['DNS Lookup','DNS','🔎','Resolve records'],['Port Scanner','TCP','🚪','Open ports & services'],
+  ['Subnet Calc','IPAM','🧮','CIDR / mask math'],['iperf','Bandwidth','⚡','Throughput test'],
+  ['SSL Inspector','TLS','🔐','Cert & cipher check'],['MAC Lookup','OUI','🏷','Vendor from MAC'],
+  ['Packet Capture','pcap','🦈','Live capture + filters']];
+let curTool='Ping';
+function renderTools(){
+  document.getElementById('toolGrid').innerHTML=tools.map(t=>`<div class="tool" onclick="pickTool('${t[0]}','${t[1]}')"><div class="ti">${t[2]}</div><h4>${t[0]}</h4><p>${t[3]}</p></div>`).join('');
+}
+function pickTool(name,tag){curTool=name;document.getElementById('toolTitle').textContent=name;document.getElementById('toolTag').textContent=tag;document.getElementById('toolOut').textContent='Ready. Enter a target and click Run.';}
+function runTool(){
+  const v=document.getElementById('toolInput').value||'10.0.0.1';
+  const out=document.getElementById('toolOut');
+  const samples={
+    'Ping':`PING ${v}: 56 data bytes\n64 bytes from ${v}: icmp_seq=0 ttl=64 time=1.12 ms\n64 bytes from ${v}: icmp_seq=1 ttl=64 time=0.98 ms\n64 bytes from ${v}: icmp_seq=2 ttl=64 time=1.04 ms\n--- ${v} ping statistics ---\n3 packets transmitted, 3 received, 0% loss, avg 1.05 ms`,
+    'Traceroute':`traceroute to ${v}, 30 hops max\n 1  10.0.0.1   0.4 ms\n 2  172.16.0.1 1.2 ms\n 3  203.0.113.1 4.8 ms\n 4  ${v}      11.3 ms`,
+    'DNS Lookup':`;; ANSWER SECTION:\n${v}.  300  IN  A   203.0.113.42\n${v}.  300  IN  MX  10 mail.${v}.\n${v}.  300  IN  NS  ns1.${v}.`,
+    'Port Scanner':`Scanning ${v}…\n22/tcp   open   ssh     OpenSSH 8.9\n80/tcp   open   http    nginx 1.24\n443/tcp  open   https   nginx 1.24\n3389/tcp closed rdp`,
+    'Subnet Calc':`Network:   ${v}\nNetmask:   255.255.255.0 (/24)\nWildcard:  0.0.0.255\nHostMin:   .1   HostMax: .254\nUsable:    254 hosts`,
+    'iperf':`Connecting to ${v}…\n[ ID] Interval     Transfer   Bandwidth\n[  5] 0.0-10.0 s  1.10 GBytes  944 Mbits/sec`,
+    'SSL Inspector':`Host: ${v}:443\nIssuer:  Let's Encrypt R3\nValid:   2026-04-01 → 2026-06-30\nTLS:     1.3 (1.0/1.1 disabled ✓)\nCipher:  TLS_AES_256_GCM_SHA384`,
+    'MAC Lookup':`Input: ${v}\nOUI:   00:1B:44\nVendor: Cisco Systems, Inc.`,
+    'Packet Capture':`capturing on eth0 … filter: host ${v}\n12:04:01.2  ${v} → 10.0.0.5  TCP 443 [SYN]\n12:04:01.2  10.0.0.5 → ${v}  TCP 443 [SYN,ACK]\n12:04:01.2  ${v} → 10.0.0.5  TLSv1.3 ClientHello`
+  };
+  out.textContent=samples[curTool]||('Running '+curTool+' on '+v+'…');
+}
+
+// Sparkline + topology
+function renderDash(){
+  const s=document.getElementById('dashSpark');
+  let h='';for(let i=0;i<48;i++){const v=30+Math.round(50*Math.abs(Math.sin(i/4))+Math.random()*15);h+=`<span style="height:${v}%"></span>`;}
+  s.innerHTML=h;
+  // topology
+  const svg=document.getElementById('topo');
+  const nodes=[['edge-rtr-01',450,40,'#22d3ee'],['edge-fw-01',300,110,'#a855f7'],['edge-fw-02',600,110,'#a855f7'],
+   ['core-sw-01',300,190,'#3b82f6'],['core-sw-02',600,190,'#3b82f6'],
+   ['dist-sw-04',180,280,'#3b82f6'],['ap-floor3-11',420,280,'#22c55e'],['esxi-host-07',720,280,'#22c55e']];
+  const links=[[0,1],[0,2],[1,3],[2,4],[3,4],[3,5],[3,6],[4,7]];
+  let g='';
+  links.forEach(l=>{const a=nodes[l[0]],b=nodes[l[1]];g+=`<line x1="${a[1]}" y1="${a[2]}" x2="${b[1]}" y2="${b[2]}" stroke="#243049" stroke-width="2"/>`;});
+  nodes.forEach(n=>{g+=`<g><circle cx="${n[1]}" cy="${n[2]}" r="9" fill="${n[3]}"/><circle cx="${n[1]}" cy="${n[2]}" r="14" fill="none" stroke="${n[3]}" stroke-opacity=".3" stroke-width="2"/><text x="${n[1]}" y="${n[2]-18}" fill="#cdd6e6" font-size="11" text-anchor="middle">${n[0]}</text></g>`;});
+  svg.innerHTML=g;
+}
+
+// ---------- Firmware scanner ----------
+const cves=[
+  ['Critical','CVE-2024-3094','xz/liblzma','5.6.1','5.6.2','Malicious backdoor in upstream tarball','b-red'],
+  ['Critical','CVE-2023-38545','curl','8.2.1','8.4.0','SOCKS5 heap buffer overflow','b-red'],
+  ['Critical','CVE-2021-3711','OpenSSL','1.1.1k','1.1.1l','SM2 decryption buffer overflow (RCE)','b-red'],
+  ['High','CVE-2022-0778','OpenSSL','1.1.1k','1.1.1n','Infinite loop DoS (BN_mod_sqrt)','b-red'],
+  ['High','CVE-2023-0464','OpenSSL','1.1.1k','1.1.1t','Policy constraint DoS','b-red'],
+  ['High','CVE-2021-44228','log4j-embedded','2.14.1','2.17.1','Log4Shell RCE','b-red'],
+  ['High','CVE-2019-5482','curl','8.2.1','—','TFTP heap overflow','b-red'],
+  ['Medium','CVE-2022-37434','zlib','1.2.11','1.2.12','Heap over-read in inflate()','b-amber'],
+  ['Medium','CVE-2021-33910','systemd','247','248','Stack exhaustion DoS','b-amber'],
+  ['Medium','CVE-2020-8597','pppd','2.4.7','2.4.8','EAP buffer overflow','b-amber'],
+  ['Low','CVE-2018-1000517','busybox','1.30.0','1.30.1','wget heap overflow','b-blue'],
+];
+const sbom=[['BusyBox','1.30.0','binary','GPL-2.0','1'],['OpenSSL','1.1.1k','library','Apache-2.0','3'],
+['curl','8.2.1','binary','curl','2'],['Linux kernel','4.14.221','kernel','GPL-2.0','0'],
+['dropbear','2020.81','binary','MIT','0'],['zlib','1.2.11','library','Zlib','1'],
+['systemd','247','init','LGPL-2.1','1'],['pppd','2.4.7','binary','BSD','1'],['uboot','2019.07','bootloader','GPL-2.0','0'],
+['lighttpd','1.4.55','binary','BSD','0'],['xz/liblzma','5.6.1','library','public-domain','1'],['log4j-embedded','2.14.1','library','Apache-2.0','1']];
+
+const fwSteps=[
+  '[unpack]  Identifying image format … TRX header detected',
+  '[unpack]  Carving filesystems … SquashFS @ 0x1A0000 (12.4 MB), CramFS bootloader region',
+  '[unpack]  Extracting root filesystem … 1,842 files recovered',
+  '[ident ]  Fingerprinting binaries via version strings & symbol tables',
+  '[ident ]  Detected: Linux 4.14.221, BusyBox 1.30.0, OpenSSL 1.1.1k, curl 8.2.1 …',
+  '[sbom  ]  Generating CycloneDX SBOM … 42 components catalogued',
+  '[cve   ]  Querying NVD feed + vendor advisories for matched versions',
+  '[cve   ]  11 CVEs matched (3 critical, 4 high, 3 medium, 1 low)',
+  '[secret]  Scanning for hardcoded credentials & private keys',
+  '[secret]  ⚠ Found: /etc/shadow root hash + embedded RSA private key in /etc/dropbear',
+  '[report]  Computing CVSS-weighted risk score … 78 (High)',
+  '[done  ]  Scan complete.'
+];
+
+function startScan(name){
+  document.getElementById('fwUpload').classList.add('hidden');
+  document.getElementById('fwReport').classList.add('hidden');
+  document.getElementById('fwProgress').classList.remove('hidden');
+  const c=document.getElementById('fwConsole');c.textContent='> scanning '+name+'\n';
+  ['st1','st2','st3','st4','st5'].forEach(s=>{document.getElementById(s).className='step';});
+  let i=0;
+  const stepMap=[0,0,0,1,1,2,3,3,3,3,4,4];
+  const timer=setInterval(()=>{
+    if(i>=fwSteps.length){clearInterval(timer);showReport();return;}
+    c.textContent+=fwSteps[i]+'\n';c.scrollTop=c.scrollHeight;
+    const stepEls=['st1','st2','st3','st4','st5'];
+    stepEls.forEach((s,idx)=>{document.getElementById(s).className='step'+(idx<stepMap[i]?' done':idx===stepMap[i]?' active':'');});
+    i++;
+  },420);
+}
+function showReport(){
+  document.getElementById('fwProgress').classList.add('hidden');
+  document.getElementById('fwReport').classList.remove('hidden');
+  document.getElementById('cveBody').innerHTML=cves.map(c=>`<tr><td><span class="badge ${c[6]}">${c[0]}</span></td><td><b>${c[1]}</b></td><td>${c[2]}</td><td>${c[3]}</td><td>${c[4]}</td><td>${c[5]}</td></tr>`).join('');
+  document.getElementById('sbomBody').innerHTML=sbom.map(s=>`<tr><td><b>${s[0]}</b></td><td>${s[1]}</td><td><span class="badge b-gray">${s[2]}</span></td><td>${s[3]}</td><td>${s[4]==='0'?'<span class="badge b-green">0</span>':'<span class="badge b-red">'+s[4]+'</span>'}</td></tr>`).join('');
+}
+function resetScan(){
+  document.getElementById('fwReport').classList.add('hidden');
+  document.getElementById('fwProgress').classList.add('hidden');
+  document.getElementById('fwUpload').classList.remove('hidden');
+}
+const drop=document.getElementById('drop');
+drop.addEventListener('click',()=>startScan('router_ac1900_v2.1.4.bin'));
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over');});
+drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');const f=e.dataTransfer.files[0];startScan(f?f.name:'uploaded_firmware.bin');});
+
+// init
+renderInventory();renderMon();renderIpam();renderSec();renderTools();pickTool('Ping','ICMP');renderDash();
+</script>
+</body>
+</html>
